@@ -5,11 +5,12 @@ from datetime import datetime
 from datetime import timedelta
 
 template_mttr = '''
-Суммарное время простоя в мин:      {} 
 Кол-во инфраструктурных инцидентов: {}
-Целевое значение MTTR мин:          {}  
-MTTR мин:                           {}
+Целевое значение MTTR, мин:         {}
+Суммарное время простоя, мин:       {} 
+MTTR расчитанное, мин:              {}
 Итоговое значение КПЭ %:            {}
+Необходимое кол-во инцидентов для достижения целевого показателя: {}
 '''
 
 def index_row(line):
@@ -27,17 +28,18 @@ with open('export.csv', 'r') as f:
             first_line = False
         else:            
             incident = line.strip().split(';')
-            if incident != [''] and incident[index_time_work] != '' and incident[index_close] != '':
+            if incident != [''] and incident[index_time_work].replace('"','') != '' and incident[index_close].replace('"','') != '':
                 count_incident += 1            
                 time_ref_to_work        = datetime.strptime(incident[index_time_work].replace('"',''), '%d/%m/%y %H:%M:%S')
                 time_close_monit_system = datetime.strptime(incident[index_close].replace('"',''), '%d/%m/%y %H:%M:%S')
                 sum_time_all_incident   = sum_time_all_incident + (time_close_monit_system - time_ref_to_work).total_seconds()
 
-    print(template_mttr.format(int((sum_time_all_incident / 60)),
-                               count_incident, 
+    print(template_mttr.format(count_incident,
                                target_mttr,
+                               int((sum_time_all_incident / 60)),
                                int((sum_time_all_incident / 60) / count_incident),
-                               int((target_mttr / ((sum_time_all_incident / 60) / count_incident)) * 100)))
+                               int((target_mttr / ((sum_time_all_incident / 60) / count_incident)) * 100),
+                               int((count_incident * target_mttr)/((sum_time_all_incident / 60) / count_incident)) + count_incident))
 
 
 

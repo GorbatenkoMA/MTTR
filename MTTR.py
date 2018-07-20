@@ -28,9 +28,9 @@ with open('export.csv', 'r') as f:
         else:            
             incident = line.strip().split(';')
             if incident != [''] and incident[index_time_work] != '' and incident[index_close] != '':
-                count_incident += 1
-                time_ref_to_work        = datetime.strptime(incident[index_time_work], '%d.%m.%Y %H:%M')
-                time_close_monit_system = datetime.strptime(incident[index_close], '%d.%m.%Y %H:%M')
+                count_incident += 1            
+                time_ref_to_work        = datetime.strptime(incident[index_time_work].replace('"',''), '%d/%m/%y %H:%M:%S')
+                time_close_monit_system = datetime.strptime(incident[index_close].replace('"',''), '%d/%m/%y %H:%M:%S')
                 sum_time_all_incident   = sum_time_all_incident + (time_close_monit_system - time_ref_to_work).total_seconds()
 
     print(template_mttr.format(int((sum_time_all_incident / 60)),

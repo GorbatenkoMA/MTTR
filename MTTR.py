@@ -13,6 +13,14 @@ MTTR расчитанное, мин:              {}
 Необходимое кол-во инцидентов для достижения целевого показателя: {}
 '''
 
+dict_mttr = {'count_incident': None,
+           'target_mttr': None,
+           'sum_time_all_incident': None,
+           'mttr': None,
+           'kpe': None,
+           'count_incident_to_target_mttr': None,
+           'dict_incident': {}}
+
 def index_row(line):
     l = line.strip().split(';')
     return l.index('Номер'), l.index('Время направления в работу'), l.index('Время закрытия события в системе мониторинга')
@@ -22,6 +30,7 @@ def calc_mttr(espp_file = 'export.csv', target_mttr = 130):
         sum_time_all_incident = 0
         count_incident = 0
         first_line = True
+        dict_incident = {}
         for line in f:
             if first_line:
                 index_num_incident, index_time_work, index_close = index_row(line)
@@ -33,13 +42,18 @@ def calc_mttr(espp_file = 'export.csv', target_mttr = 130):
                     time_ref_to_work        = datetime.strptime(incident[index_time_work].replace('"',''), '%d/%m/%y %H:%M:%S')
                     time_close_monit_system = datetime.strptime(incident[index_close].replace('"',''), '%d/%m/%y %H:%M:%S')
                     sum_time_all_incident   = sum_time_all_incident + (time_close_monit_system - time_ref_to_work).total_seconds()
-
-        print(template_mttr.format(count_incident,
+                    dict_incident[incident[index_num_incident]] = (time_close_monit_system - time_ref_to_work).total_seconds()
+    
+    print(template_mttr.format(count_incident,
                                    target_mttr,
                                    int((sum_time_all_incident / 60)),
                                    int((sum_time_all_incident / 60) / count_incident),
                                    int((target_mttr / ((sum_time_all_incident / 60) / count_incident)) * 100),
                                    int((count_incident * target_mttr)/((sum_time_all_incident / 60) / count_incident)) + count_incident))
+    for inc,time in dict_incident.items():
+        print(inc,' ',round(time/60, 2),' ',round(((time/60)*100)/(sum_time_all_incident/60), 2))
+
+
 
 calc_mttr()
 

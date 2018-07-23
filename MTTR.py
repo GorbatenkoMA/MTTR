@@ -3,6 +3,7 @@
 
 from datetime import datetime
 from datetime import timedelta
+from operator import itemgetter
 
 template_mttr = '''
 Кол-во инфраструктурных инцидентов: {}
@@ -11,6 +12,10 @@ template_mttr = '''
 MTTR расчитанное, мин:              {}
 Итоговое значение КПЭ %:            {}
 Необходимое кол-во инцидентов для достижения целевого показателя: {}
+'''
+
+template_incident = '''
+{}            {}                 {}
 '''
 
 dict_mttr = {'count_incident': None,
@@ -30,7 +35,7 @@ def calc_mttr(espp_file = 'export.csv', target_mttr = 130):
         sum_time_all_incident = 0
         count_incident = 0
         first_line = True
-        dict_incident = {}
+        #dict_incident = {}
         for line in f:
             if first_line:
                 index_num_incident, index_time_work, index_close = index_row(line)
@@ -41,19 +46,27 @@ def calc_mttr(espp_file = 'export.csv', target_mttr = 130):
                     count_incident += 1            
                     time_ref_to_work        = datetime.strptime(incident[index_time_work].replace('"',''), '%d/%m/%y %H:%M:%S')
                     time_close_monit_system = datetime.strptime(incident[index_close].replace('"',''), '%d/%m/%y %H:%M:%S')
-                    sum_time_all_incident   = sum_time_all_incident + (time_close_monit_system - time_ref_to_work).total_seconds()
-                    dict_incident[incident[index_num_incident]] = (time_close_monit_system - time_ref_to_work).total_seconds()
-    
-    print(template_mttr.format(count_incident,
-                                   target_mttr,
-                                   int((sum_time_all_incident / 60)),
-                                   int((sum_time_all_incident / 60) / count_incident),
-                                   int((target_mttr / ((sum_time_all_incident / 60) / count_incident)) * 100),
-                                   int((count_incident * target_mttr)/((sum_time_all_incident / 60) / count_incident)) + count_incident))
-    for inc,time in dict_incident.items():
-        print(inc,' ',round(time/60, 2),' ',round(((time/60)*100)/(sum_time_all_incident/60), 2))
+                    sum_time_all_incident = sum_time_all_incident + ((time_close_monit_system - time_ref_to_work).total_seconds())/60 # в минутах
+                    dict_mttr['dict_incident'][incident[index_num_incident]] = int(((time_close_monit_system - time_ref_to_work).total_seconds())/60)
+
+    dict_mttr['count_incident'] = int(count_incident)
+    dict_mttr['target_mttr'] = target_mttr
+    dict_mttr['sum_time_all_incident'] = int(sum_time_all_incident)
+    dict_mttr['mttr'] = int(sum_time_all_incident / count_incident)
+    dict_mttr['kpe'] = int((target_mttr / (sum_time_all_incident / count_incident)) * 100)
+    dict_mttr['count_incident_to_target_mttr'] = int((count_incident * target_mttr) / (sum_time_all_incident / count_incident) + count_incident)
+
+    return dict_mttr
 
 
 
-calc_mttr()
+d = calc_mttr()
+
+print(template_mttr.format(d['count_incident'], d['target_mttr'], d['sum_time_all_incident'], d['mttr'], d['kpe'], d['count_incident_to_target_mttr']))
+
+print('{:20}{:10} {}\n'.format('Инцидент', 'Время_простоя', 'Процент_влияния_на_mttr'))
+
+for k,v in sorted(d['dict_incident'].items(), key=itemgetter(1), reverse=True):
+    print('{}  {:5}  {:15.2f}'.format(k, v, ((v * 100) / d['sum_time_all_incident'])))
+     
 

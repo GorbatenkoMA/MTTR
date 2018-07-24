@@ -13,11 +13,6 @@ MTTR расчитанное, мин:              {}
 Итоговое значение КПЭ %:            {}
 Необходимое кол-во инцидентов для достижения целевого показателя: {}
 '''
-
-template_incident = '''
-{}            {}                 {}
-'''
-
 dict_mttr = {'count_incident': None,
            'target_mttr': None,
            'sum_time_all_incident': None,
@@ -64,9 +59,9 @@ d = calc_mttr()
 
 print(template_mttr.format(d['count_incident'], d['target_mttr'], d['sum_time_all_incident'], d['mttr'], d['kpe'], d['count_incident_to_target_mttr']))
 
-print('{:20}{:10} {}\n'.format('Инцидент', 'Время_простоя', 'Процент_влияния_на_mttr'))
+print('{:20}{:15} {}\n'.format('Инцидент', 'Время_простоя', 'Процент_влияния_на_mttr'))
 
 for k,v in sorted(d['dict_incident'].items(), key=itemgetter(1), reverse=True):
-    print('{}  {:5}  {:15.2f}'.format(k, v, ((v * 100) / d['sum_time_all_incident'])))
+    print('{}  {:8}  {:15.2f}'.format(k.replace('"',''), v, ((v * 100) / d['sum_time_all_incident'])))
      
 

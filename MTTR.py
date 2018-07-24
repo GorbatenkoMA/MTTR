@@ -30,7 +30,6 @@ def calc_mttr(espp_file = 'export.csv', target_mttr = 130):
         sum_time_all_incident = 0
         count_incident = 0
         first_line = True
-        #dict_incident = {}
         for line in f:
             if first_line:
                 index_num_incident, index_time_work, index_close = index_row(line)
@@ -52,8 +51,6 @@ def calc_mttr(espp_file = 'export.csv', target_mttr = 130):
     dict_mttr['count_incident_to_target_mttr'] = int((count_incident * target_mttr) / (sum_time_all_incident / count_incident) + count_incident)
 
     return dict_mttr
-
-
 
 d = calc_mttr()
 
